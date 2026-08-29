@@ -1,0 +1,204 @@
+{
+  "main": {
+    "id": "95c78a581e3d741d",
+    "type": "split",
+    "children": [
+      {
+        "id": "47633b10e114643c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "724c5d28f75c3829",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Start Here (Delete after entered).md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Start Here (Delete after entered)"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "282465bddc2dfb4d",
+    "type": "split",
+    "children": [
+      {
+        "id": "28a5180d25bde714",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f652b21245e84b61",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "75ef42082f55ca78",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "3b08a3182f812b5a",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "2ce007da64d0b415",
+    "type": "split",
+    "children": [
+      {
+        "id": "7e2ecc67ebb47582",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7c8378f238d1c940",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Excalidraw/Drawing 2026-06-16 00.57.49.excalidraw.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Drawing 2026-06-16 00.57.49.excalidraw"
+            }
+          },
+          {
+            "id": "a27d5170799a510b",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Excalidraw/Drawing 2026-06-16 00.57.49.excalidraw.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Drawing 2026-06-16 00.57.49.excalidraw"
+            }
+          },
+          {
+            "id": "db2eef9afd845af2",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "ad9071e3a9ce10d0",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "184e86ae23578e7f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Excalidraw/Drawing 2026-06-16 00.57.49.excalidraw.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Drawing 2026-06-16 00.57.49.excalidraw"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "drawio:Launch draw.io editor": false,
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "obsidian-excalidraw-plugin:New drawing": false,
+      "tags-routes:Open tags routes": false
+    }
+  },
+  "active": "f652b21245e84b61",
+  "lastOpenFiles": [
+    "Untitled.canvas",
+    "Start Here (Delete after entered).md",
+    "TagsRoutes/logMessage.md",
+    "TagsRoutes/logs",
+    "TagsRoutes",
+    "Project Main Diagram (Change Name Once Entered).drawio",
+    "Project Main Diagram (Change Name Once Entered).drawio.svg",
+    "input.md",
+    "notes.md",
+    "Untitled.md",
+    "Excalidraw/Drawing 2026-06-16 00.57.49.excalidraw.md",
+    "Excalidraw"
+  ]
+}

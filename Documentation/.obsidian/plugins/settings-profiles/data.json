@@ -1,0 +1,19 @@
+{
+  "activeProfile": {
+    "name": "Main",
+    "modifiedAt": "2026-06-25T10:20:31.561Z"
+  },
+  "profileUpdate": true,
+  "profileUpdateDelay": 800,
+  "uiUpdate": true,
+  "uiUpdateInterval": 1000,
+  "devices": {
+    "ad1e4568a589f893caf48fc3c1e6def786ed0b457837c2c0c4c5d37eae25276d": "C:\\Users\\OwO\\AppData\\Local\\ObsidianPlugins\\Data\\Profiles"
+  },
+  "statusbarInteraction": {
+    "click": "auto",
+    "ctrl_click": "none",
+    "shift_click": "none",
+    "alt_click": "none"
+  }
+}

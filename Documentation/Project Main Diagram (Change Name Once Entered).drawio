@@ -1,0 +1,21 @@
+<mxfile host="Electron" pages="2">
+  <diagram name="Project Scope" id="nNeGuobyzLHLrBPkOE6d">
+    <mxGraphModel dx="822" dy="500" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="280" pageHeight="140" background="#000000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="k2ATQBEGeFwKze0A8I8o-1" parent="1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fontColor=#FF0000;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Project Scope&lt;/h1&gt;&lt;p&gt;Change colour when scope is written&lt;/p&gt;" vertex="1">
+          <mxGeometry height="100" width="240" x="20" y="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="IMUp0Hsa44ZDUP0Q3erW" name="Brainstorm">
+    <mxGraphModel dx="2054" dy="1249" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
