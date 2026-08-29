@@ -1,42 +1,54 @@
-# Project Name
-The Project Scope - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut viverra interdum nisi. In hac habitasse platea dictumst. Integer tincidunt, felis a pellentesque scelerisque, turpis sapien lacinia lectus, eu ultricies nibh leo mollis metus. Nullam a velit condimentum, tempor felis sit amet, euismod lectus. Phasellus sed orci a lectus placerat lacinia sed ac magna. Pellentesque quis mollis dolor. Suspendisse vel imperdiet mauris, a aliquam urna. Ut mattis risus nec sem tincidunt, ac facilisis sem fringilla. Praesent placerat vehicula euismod. Suspendisse volutpat massa id massa facilisis porta.
+# Alula
 
-![Project_Image](.assets/Undaconstwuction.png)
+An extra control surface for a pen’s two barrel buttons — named after a bird’s **alula**, the small “thumb” on the wing.
 
-## Required tools (for docs & project files)
+Alula does not talk to a Wacom driver. It watches **4th click** and **5th click** (Back / Forward mouse buttons). Any tablet or mouse that can send those will work. Defaults are tuned for **Krita** on Windows.
 
-- **Main diagrams app (diagrams.net / draw.io desktop)**: use the latest release from [drawio-desktop releases](https://github.com/jgraph/drawio-desktop/releases/).
-- **PureRef (image board / reference)**: download from [PureRef downloads](https://www.pureref.com/download.php).
-- **KiCad (electronics design / schematics / PCB)**: download from [KiCad stable downloads (Windows)](https://downloads.kicad.org/kicad/windows/explore/stable#cat-12-1).
-- **LibreOffice (docs/spreadsheets)**: download from [LibreOffice downloads](https://www.libreoffice.org/download/) (local install recommended).
+| Button | Gesture | Action |
+| --- | --- | --- |
+| Rear (4th click) | Hold | Zoom (`Ctrl+Space` + drag) |
+| Rear | Double-click and hold | Pan (`Space` + drag) |
+| Front (5th click) | Click | Undo (`Ctrl+Z`) |
+| Front | Hold | Sample colour (Krita Ctrl picker) |
 
-### Keeping a local copy (without bloating the repo)
+## Install with the script
 
-Because installers can be 100–300MB+, it’s best to **not commit them into git history**. Good options:
+1. Clone or download this folder and keep it somewhere permanent (the startup shortcut points here).
+2. In that folder, run:
 
-- **Preferred**: keep a `tools-cache/` folder **ignored by git**, and store installers locally there.
-- **Shareable “local copy”**: attach installers to a **GitHub Release** (release assets support large files), or keep a separate “tools” repo.
-- **Alternative**: use **Git LFS** for large binaries (works, but adds LFS setup/quotas and still grows storage).
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
 
-## Features
+That installs AutoHotkey v2 if needed, starts Alula, and adds it to Windows startup.
 
-- Some Mentionable Features that the Project focuses on
+3. Map the hardware buttons (once):
 
-## [Hardware](/Hardware/README.md)
+**Wacom Center** → your tablet → **Pen**
 
-Hardware Overview - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut viverra interdum nisi. In hac habitasse platea dictumst. Integer tincidunt, felis a pellentesque scelerisque, turpis sapien lacinia lectus, eu ultricies nibh leo mollis metus. Nullam a velit condimentum, tempor felis sit amet, euismod lectus. Phasellus sed orci a lectus placerat lacinia sed ac magna. Pellentesque quis mollis dolor. Suspendisse vel imperdiet mauris, a aliquam urna. Ut mattis risus nec sem tincidunt, ac facilisis sem fringilla. Praesent placerat vehicula euismod. Suspendisse volutpat massa id massa facilisis porta.
+- Rear / second barrel button → **4th click** (Back)
+- Front / first barrel button → **5th click** (Forward)
 
-## [Software](/Software/README.md)
+Do not leave them on Right click, Pan/Zoom, or a keystroke.
 
-Software Overview - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut viverra interdum nisi. In hac habitasse platea dictumst. Integer tincidunt, felis a pellentesque scelerisque, turpis sapien lacinia lectus, eu ultricies nibh leo mollis metus. Nullam a velit condimentum, tempor felis sit amet, euismod lectus. Phasellus sed orci a lectus placerat lacinia sed ac magna. Pellentesque quis mollis dolor. Suspendisse vel imperdiet mauris, a aliquam urna. Ut mattis risus nec sem tincidunt, ac facilisis sem fringilla. Praesent placerat vehicula euismod. Suspendisse volutpat massa id massa facilisis porta.
+4. Open Krita. A tray icon named Alula should be near the clock.
 
-## [Embedded](/Embedded/README.md)
+To stop startup later: tray → **Run at Windows startup**, or run `uninstall.ps1`.
 
-Embedded Overview - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut viverra interdum nisi. In hac habitasse platea dictumst. Integer tincidunt, felis a pellentesque scelerisque, turpis sapien lacinia lectus, eu ultricies nibh leo mollis metus. Nullam a velit condimentum, tempor felis sit amet, euismod lectus. Phasellus sed orci a lectus placerat lacinia sed ac magna. Pellentesque quis mollis dolor. Suspendisse vel imperdiet mauris, a aliquam urna. Ut mattis risus nec sem tincidunt, ac facilisis sem fringilla. Praesent placerat vehicula euismod. Suspendisse volutpat massa id massa facilisis porta.
+## Install without the script
 
-## Roadmap
+Step-by-step (download AutoHotkey yourself, no PowerShell): **[docs/install-manual.md](docs/install-manual.md)**
 
-- Milestones: Things I've Completed/Achieved within the project
-- Work In Progress: Things I'm Working on at the moment or havent completed yet
-- Planned: Things that are planned for the future
+## Docs
 
+- **[How to use](docs/usage.md)** — gestures, tray menu, Krita shortcuts
+- **[Config](docs/config.md)** — `config.ini` keys
+- **[How it works](docs/how-it-works.md)** — why this is not a tablet driver plugin
+
+## Uninstall
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\uninstall.ps1
+```
+
+Removes the startup shortcut and stops Alula. It does not remove AutoHotkey.

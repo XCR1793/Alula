@@ -1,51 +1,6 @@
-# --- Office / Productivity ---
-# LibreOffice Calc & Writer Temporary Files
-*.ods#
-*.odt#
+# User config (copied from config.example.ini on first run)
+config.ini
 
-# Draw.IO Cache
-*.bkp
-
-# Krita Backup/Autosave
-*.kra~
-*.kra-autosave.kra
-
-# --- Hardware / KiCAD ---
-# KiCAD Temp Files
-*.lck
-*.kicad_prl
-*fp-info-cache
-
-# --- Web Development ---
-# Dependencies
-node_modules/
-
-# Build Output
-dist/
-*.tsbuildinfo
-
-# Vite & Environment
-.env
-.env.*
-!.env.example
-*.local
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# --- Editors & IDEs ---
-# VS Code
-.vscode/*
-!.vscode/extensions.json
-
-# Vim
-*.swp
-*.swo
-
-# --- System Files ---
 # Windows
 Thumbs.db
 Desktop.ini
@@ -53,5 +8,8 @@ Desktop.ini
 # macOS
 .DS_Store
 
-# Generic Archives
-*.zip
+# Editors
+*.swp
+*.swo
+.vscode/*
+!.vscode/extensions.json
