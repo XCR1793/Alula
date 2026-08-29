@@ -16,9 +16,16 @@ So it is **not** Wacom-specific. Anything that can generate 4th and 5th click ca
 
 ## Gestures
 
-**Rear button** — two hold modes. The first press starts zoom (or pan) immediately. A second press soon after switches to the other mode. Distinguishing a double-click without delaying the first hold means the first tap of a double-click may flash the first mode briefly.
+Each 4th/5th-click button can enable any mix of:
 
-**Front button** — click vs hold. A short press is undo; a longer press holds Ctrl and clicks once to sample colour under the cursor, then keeps Ctrl down so you can tap more spots.
+- single click
+- double click
+- click and hold
+- double-click and hold
+
+Disabled gestures are skipped, so Alula only inserts a wait when two **enabled** gestures would otherwise look the same. Example: with hold on and single click off, zoom starts immediately. With undo (click) and sample (hold) both on, it waits `HoldMs` to tell them apart.
+
+The first tap of a double-click-hold may flash the single-hold action for a moment if that hold starts immediately.
 
 ## Why 4th and 5th click
 

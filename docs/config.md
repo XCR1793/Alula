@@ -1,30 +1,43 @@
 # Config
 
-Alula reads `config.ini` next to `Alula.ahk`. If that file is missing, it copies `config.example.ini` (or writes built-in defaults).
+Alula reads `config.ini` next to `Alula.ahk`. If that file is missing, it copies `config.example.ini`.
 
-Tray toggles write back into `config.ini`. After editing the file by hand, tray → **Reload**.
+The usual way to change mappings is **tray → Settings**. That window writes this file. After editing by hand, tray → **Reload**.
+
+## General
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `Trigger` | `XButton1` | Rear button. `XButton1` = 4th click / Back. |
-| `SampleTrigger` | `XButton2` | Front button. `XButton2` = 5th click / Forward. |
-| `OnlyKrita` | `1` | `1` = ignore the buttons unless Krita is focused. |
-| `ClickHold` | `zoom` | Rear click-hold action. Other value: `pan`. Double-hold is the opposite. |
-| `DoubleClickMs` | `280` | How long after a short rear tap a second press counts as double-hold. |
-| `SampleHoldMs` | `180` | How long the front button must be held to sample instead of undo. |
-| `ShowHint` | `1` | Brief tooltip: ZOOM, PAN, UNDO, SAMPLE. |
+| `OnlyKrita` | `1` | Ignore the buttons unless Krita is focused. |
+| `DoubleClickMs` | `280` | Window for a second press to count as double-click / double-hold. |
+| `HoldMs` | `180` | How long a press must last to count as a hold, **when a click gesture is also enabled** on that button. |
+| `ShowHint` | `1` | Brief tooltip (ZOOM, UNDO, …). |
 
-## Triggers
+## Per button (`[XButton1]` and `[XButton2]`)
 
-Use AutoHotkey mouse-button names:
+Each button has four gestures. A gesture does nothing until it is enabled (`1`), then it uses the matching `*Action`.
 
-- `XButton1` — 4th click (Back)
-- `XButton2` — 5th click (Forward)
-- `MButton` — middle click (only if you really want to steal it)
+| Key | Default 4th | Default 5th | Meaning |
+| --- | --- | --- | --- |
+| `SingleClick` | `0` | `1` | Enable single click. |
+| `SingleClickAction` | `default` | `undo` | `default` (Back/Forward), `undo`, `redo`, `sample` |
+| `DoubleClick` | `0` | `0` | Enable double click. |
+| `DoubleClickAction` | `default` | `default` | Same click actions. |
+| `Hold` | `1` | `1` | Enable click-and-hold. |
+| `HoldAction` | `zoom` | `sample` | `zoom`, `pan`, `sample` |
+| `DoubleHold` | `1` | `0` | Enable double-click-and-hold. |
+| `DoubleHoldAction` | `pan` | `zoom` | Same hold actions. |
 
-The tablet or mouse software must send that button. Alula cannot see a Wacom “Right click” or “Pan/Zoom” assignment.
+`default` on a click sends the real 4th/5th mouse button (browser Back / Forward).
 
 ## Timing
 
-- **Rear hold** is immediate. `DoubleClickMs` only defines the double-click window.
-- **Front click vs hold** cannot be immediate for both. Undo runs on release of a short press. Sample starts after `SampleHoldMs` while still held. Lower that number if sample feels late; raise it if undo keeps becoming a sample.
+Alula only waits when it must tell two **enabled** gestures apart:
+
+- Hold enabled, single and double click **off** → hold starts the instant the button goes down (4th-click zoom).
+- Single click **and** hold enabled → wait `HoldMs` (5th-click undo vs sample).
+- Double click or double-hold enabled → wait `DoubleClickMs` after a short tap for a second press.
+
+## Pass-through profile
+
+Settings → **Pass-through only** turns off every gesture except single click = Default (Back/Forward) on both buttons.

@@ -1,55 +1,56 @@
 # Using Alula
 
-Alula runs in the background. It only remaps buttons while **Krita** is focused, unless you turn that off in the tray or in `config.ini`.
+Alula runs in the background. It only remaps buttons while **Krita** is focused, unless you turn that off.
 
-## Rear button (4th click)
+## Default mapping (your current set)
 
-| Gesture | Default |
-| --- | --- |
-| Press and **hold**, then drag | Zoom |
-| **Click, click again and hold**, then drag | Pan |
+| Button | Gesture | Action |
+| --- | --- | --- |
+| 4th click (rear) | Click and hold | Zoom |
+| 4th click | Double-click and hold | Pan |
+| 5th click (front) | Single click | Undo |
+| 5th click | Click and hold | Sample colour |
 
-Zoom starts the moment the button goes down. The first tap of a double-click may flash zoom for a split second, then pan takes over.
+Single click and double click on the 4th button are **off**. Double click and double-hold on the 5th button are **off**. Enable them in Settings if you want them.
 
-Swap zoom and pan: tray icon → **Click-hold = Pan, double-hold = Zoom**.
+Zoom on the rear button starts the moment you press (no wait), because click is not enabled on that button. Undo vs sample on the front button still needs a short hold threshold so a click is not also a sample.
 
-## Front button (5th click)
+## Settings (tray)
 
-| Gesture | Default |
-| --- | --- |
-| Short **click** | Undo |
-| **Hold** over a colour | Sample that pixel |
+Right-click the Alula icon (notification area) → **Settings…**, or double-click the icon.
 
-Keep holding after a sample and tap other spots to pick more colours. Hold is detected after about 180 ms so a click is not also a sample.
+For each of **4th click** and **5th click**:
+
+1. Tick a gesture to turn it on (single click, double click, click and hold, double-click and hold).
+2. Pick a function from the list next to it.
+3. **Save**.
+
+Click functions: Default (Back/Forward), Undo, Redo, Sample.  
+Hold functions: Zoom, Pan, Sample.
+
+**Alula defaults** restores this Krita set. **Pass-through only** leaves only native Back/Forward on a single click.
 
 ## Tray menu
 
-Right-click the Alula icon (notification area):
-
-- Swap rear-button zoom / pan
+- **Settings…**
 - **Only while Krita is focused**
-- Show or hide the on-screen ZOOM / PAN / UNDO / SAMPLE hint
-- Open `config.ini`
-- Reload after you edit config
-- **Release stuck keys** if Ctrl or Space gets stuck
-- **Run at Windows startup**
+- **Show hints**
+- Open `config.ini` / Reload / Release stuck keys
+- Run at Windows startup
 - Exit
 
 ## Krita shortcuts Alula expects
-
-These are Krita’s usual canvas shortcuts. If you changed them, either change Krita back or Alula will feel wrong.
 
 | Action | Keys |
 | --- | --- |
 | Pan | `Space` + drag |
 | Zoom | `Ctrl+Space` + drag |
 | Undo | `Ctrl+Z` |
+| Redo | `Ctrl+Shift+Z` |
 | Colour sample | `Ctrl` + click |
 
-Check: **Settings → Configure Krita → Canvas Input Settings**.
-
-If you use a Photoshop-compatible input profile, colour pick may be **Alt** instead of **Ctrl**. Sampling will not work until that matches.
+**Settings → Configure Krita → Canvas Input Settings.** A Photoshop-compatible profile may use Alt for the picker instead of Ctrl.
 
 ## Other apps
 
-Alula is not Wacom-specific. Any device that can emit 4th and 5th click works. The *actions* are Krita keystrokes. To use another app, turn off “only Krita” and be aware Space / Ctrl+Space / Ctrl+Z will fire there too.
+Any device that can emit 4th and 5th click works. The functions are Krita keystrokes. Turn off “only Krita” if you want them elsewhere.

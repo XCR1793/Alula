@@ -5,191 +5,363 @@ InstallMouseHook
 InstallKeybdHook
 SendMode "Input"
 
-; Alula — extra control on a pen’s barrel buttons (the alula is a bird’s “thumb”).
-; Rear button: click-hold zoom, double-click-hold pan (Trigger = 4th click).
-; Front button: click undo, hold colour sample (SampleTrigger = 5th click).
+; Alula — four gestures per 4th/5th mouse button, assigned in tray → Settings.
 
 configPath := A_ScriptDir "\config.ini"
-trigger := "XButton1"
-sampleTrigger := "XButton2"
 onlyKrita := true
-clickHold := "zoom"
 doubleClickMs := 280
-sampleHoldMs := 180
+holdMs := 180
 showHint := true
 
-state := "idle"
-triggerHeld := false
-armedAt := 0
-downAt := 0
-currentAction := ""
-hotkeysBound := false
+clickActions := ["default", "undo", "redo", "sample"]
+holdActions := ["zoom", "pan", "sample"]
+clickLabels := ["Default (Back/Forward)", "Undo", "Redo", "Sample"]
+holdLabels := ["Zoom", "Pan", "Sample"]
 
-sampleState := "idle"
-sampleHeld := false
+buttons := Map()
+runtime := Map()
+heldFn := ""
+passThrough := false
+settingsGui := 0
+settingsCtrl := Map()
 
 LoadConfig()
+InitRuntime()
 SetupTray()
 ApplyHotkeys()
 OnExit(OnScriptExit)
 SetTimer(WatchFocus, 100)
 
+AlulaDefaults() {
+    return Map(
+        "XButton1", Map(
+            "single", Map("on", false, "fn", "default"),
+            "double", Map("on", false, "fn", "default"),
+            "hold", Map("on", true, "fn", "zoom"),
+            "doubleHold", Map("on", true, "fn", "pan")
+        ),
+        "XButton2", Map(
+            "single", Map("on", true, "fn", "undo"),
+            "double", Map("on", false, "fn", "default"),
+            "hold", Map("on", true, "fn", "sample"),
+            "doubleHold", Map("on", false, "fn", "zoom")
+        )
+    )
+}
+
+PassThroughDefaults() {
+    d := AlulaDefaults()
+    for btn, _ in d {
+        d[btn]["single"]["on"] := true
+        d[btn]["single"]["fn"] := "default"
+        d[btn]["double"]["on"] := false
+        d[btn]["hold"]["on"] := false
+        d[btn]["doubleHold"]["on"] := false
+    }
+    return d
+}
+
+NormClick(fn) {
+    global clickActions
+    fn := StrLower(fn)
+    for a in clickActions
+        if a = fn
+            return fn
+    return "default"
+}
+
+NormHold(fn) {
+    global holdActions
+    fn := StrLower(fn)
+    for a in holdActions
+        if a = fn
+            return fn
+    return "zoom"
+}
+
+IniOn(section, key, fallback) {
+    global configPath
+    return IniRead(configPath, section, key, fallback) = "1"
+}
+
 LoadConfig() {
-    global configPath, trigger, sampleTrigger, onlyKrita, clickHold, doubleClickMs, sampleHoldMs, showHint
+    global configPath, onlyKrita, doubleClickMs, holdMs, showHint, buttons
     examplePath := A_ScriptDir "\config.example.ini"
     if !FileExist(configPath) && FileExist(examplePath)
         FileCopy(examplePath, configPath)
     if !FileExist(configPath) {
+        buttons := AlulaDefaults()
         SaveConfig()
         return
     }
-    trigger := IniRead(configPath, "General", "Trigger", "XButton1")
-    sampleTrigger := IniRead(configPath, "General", "SampleTrigger", "XButton2")
+    if IniRead(configPath, "General", "ClickHold", "") != ""
+        MigrateOldConfig()
     onlyKrita := IniRead(configPath, "General", "OnlyKrita", "1") = "1"
+    doubleClickMs := Integer(IniRead(configPath, "General", "DoubleClickMs", "280"))
+    holdMs := Integer(IniRead(configPath, "General", "HoldMs", IniRead(configPath, "General", "SampleHoldMs", "180")))
+    showHint := IniRead(configPath, "General", "ShowHint", "1") = "1"
+    buttons := AlulaDefaults()
+    for btn in ["XButton1", "XButton2"] {
+        buttons[btn]["single"]["on"] := IniOn(btn, "SingleClick", buttons[btn]["single"]["on"] ? "1" : "0")
+        buttons[btn]["single"]["fn"] := NormClick(IniRead(configPath, btn, "SingleClickAction", "default"))
+        buttons[btn]["double"]["on"] := IniOn(btn, "DoubleClick", "0")
+        buttons[btn]["double"]["fn"] := NormClick(IniRead(configPath, btn, "DoubleClickAction", "default"))
+        buttons[btn]["hold"]["on"] := IniOn(btn, "Hold", buttons[btn]["hold"]["on"] ? "1" : "0")
+        buttons[btn]["hold"]["fn"] := NormHold(IniRead(configPath, btn, "HoldAction", "zoom"))
+        buttons[btn]["doubleHold"]["on"] := IniOn(btn, "DoubleHold", buttons[btn]["doubleHold"]["on"] ? "1" : "0")
+        buttons[btn]["doubleHold"]["fn"] := NormHold(IniRead(configPath, btn, "DoubleHoldAction", "pan"))
+    }
+}
+
+MigrateOldConfig() {
+    global configPath
     clickHold := StrLower(IniRead(configPath, "General", "ClickHold", "zoom"))
     if clickHold != "zoom" && clickHold != "pan"
         clickHold := "zoom"
-    doubleClickMs := Integer(IniRead(configPath, "General", "DoubleClickMs", "280"))
-    sampleHoldMs := Integer(IniRead(configPath, "General", "SampleHoldMs", "180"))
-    showHint := IniRead(configPath, "General", "ShowHint", "1") = "1"
+    other := clickHold = "zoom" ? "pan" : "zoom"
+    IniDelete(configPath, "General", "Trigger")
+    IniDelete(configPath, "General", "SampleTrigger")
+    IniDelete(configPath, "General", "ClickHold")
+    IniDelete(configPath, "General", "SampleHoldMs")
+    buttons := AlulaDefaults()
+    buttons["XButton1"]["hold"]["fn"] := clickHold
+    buttons["XButton1"]["doubleHold"]["fn"] := other
+    SaveButtons(buttons)
+}
+
+SaveButtons(btns) {
+    global configPath
+    for btn, g in btns {
+        IniWrite(g["single"]["on"] ? "1" : "0", configPath, btn, "SingleClick")
+        IniWrite(g["single"]["fn"], configPath, btn, "SingleClickAction")
+        IniWrite(g["double"]["on"] ? "1" : "0", configPath, btn, "DoubleClick")
+        IniWrite(g["double"]["fn"], configPath, btn, "DoubleClickAction")
+        IniWrite(g["hold"]["on"] ? "1" : "0", configPath, btn, "Hold")
+        IniWrite(g["hold"]["fn"], configPath, btn, "HoldAction")
+        IniWrite(g["doubleHold"]["on"] ? "1" : "0", configPath, btn, "DoubleHold")
+        IniWrite(g["doubleHold"]["fn"], configPath, btn, "DoubleHoldAction")
+    }
 }
 
 SaveConfig() {
-    global configPath, trigger, sampleTrigger, onlyKrita, clickHold, doubleClickMs, sampleHoldMs, showHint
-    IniWrite(trigger, configPath, "General", "Trigger")
-    IniWrite(sampleTrigger, configPath, "General", "SampleTrigger")
+    global configPath, onlyKrita, doubleClickMs, holdMs, showHint, buttons
     IniWrite(onlyKrita ? "1" : "0", configPath, "General", "OnlyKrita")
-    IniWrite(clickHold, configPath, "General", "ClickHold")
     IniWrite(doubleClickMs, configPath, "General", "DoubleClickMs")
-    IniWrite(sampleHoldMs, configPath, "General", "SampleHoldMs")
+    IniWrite(holdMs, configPath, "General", "HoldMs")
     IniWrite(showHint ? "1" : "0", configPath, "General", "ShowHint")
+    SaveButtons(buttons)
+}
+
+InitRuntime() {
+    global runtime
+    runtime := Map()
+    for btn in ["XButton1", "XButton2"] {
+        runtime[btn] := Map(
+            "state", "idle",
+            "held", false,
+            "downAt", 0,
+            "holdCb", HoldTimer.Bind(btn),
+            "dblHoldCb", DoubleHoldTimer.Bind(btn),
+            "armedCb", ArmedTimer.Bind(btn)
+        )
+    }
+}
+
+On(btn, gesture) {
+    global buttons
+    return buttons[btn][gesture]["on"]
+}
+
+Fn(btn, gesture) {
+    global buttons
+    return buttons[btn][gesture]["fn"]
+}
+
+ImmediateHold(btn) {
+    return On(btn, "hold") && !On(btn, "single") && !On(btn, "double")
+}
+
+ImmediateDoubleHold(btn) {
+    return On(btn, "doubleHold") && !On(btn, "double")
+}
+
+WantsDouble(btn) {
+    return On(btn, "double") || On(btn, "doubleHold")
 }
 
 ShouldHandle(*) {
-    global onlyKrita, triggerHeld, currentAction, sampleHeld, sampleState
-    if triggerHeld || currentAction != "" || sampleHeld || sampleState != "idle"
+    global onlyKrita, runtime, heldFn
+    if heldFn != ""
         return true
+    for btn, rt in runtime
+        if rt["held"] || rt["state"] != "idle"
+            return true
     return !onlyKrita || WinActive("ahk_exe krita.exe")
 }
 
 ApplyHotkeys() {
-    global trigger, sampleTrigger, hotkeysBound
     HotIf ShouldHandle
-    try Hotkey("*" trigger, OnTriggerDown, "On")
-    try Hotkey("*" trigger " up", OnTriggerUp, "On")
-    try Hotkey("*" sampleTrigger, OnSampleDown, "On")
-    try Hotkey("*" sampleTrigger " up", OnSampleUp, "On")
+    Hotkey("*XButton1", OnDown.Bind("XButton1"), "On")
+    Hotkey("*XButton1 up", OnUp.Bind("XButton1"), "On")
+    Hotkey("*XButton2", OnDown.Bind("XButton2"), "On")
+    Hotkey("*XButton2 up", OnUp.Bind("XButton2"), "On")
     HotIf()
-    hotkeysBound := true
 }
 
-OnTriggerDown(*) {
-    global state, triggerHeld, armedAt, downAt, doubleClickMs
-    triggerHeld := true
-    downAt := A_TickCount
-    if state = "armed" && (A_TickCount - armedAt) <= doubleClickMs {
-        SetTimer(ClearArmed, 0)
-        state := "doubleHold"
-        StartNav(OtherAction())
+CancelTimers(btn) {
+    global runtime
+    rt := runtime[btn]
+    SetTimer(rt["holdCb"], 0)
+    SetTimer(rt["dblHoldCb"], 0)
+    SetTimer(rt["armedCb"], 0)
+}
+
+OnDown(btn, *) {
+    global passThrough, runtime, holdMs
+    if passThrough
+        return
+    rt := runtime[btn]
+    rt["held"] := true
+    rt["downAt"] := A_TickCount
+    if rt["state"] = "armed" {
+        CancelTimers(btn)
+        rt["state"] := "down2"
+        if ImmediateDoubleHold(btn)
+            BeginHold(btn, Fn(btn, "doubleHold"), "doubleHold")
+        else if On(btn, "doubleHold")
+            SetTimer(rt["dblHoldCb"], -holdMs)
         return
     }
-    state := "singleHold"
-    StartNav(ClickHoldAction())
+    CancelTimers(btn)
+    rt["state"] := "down1"
+    if ImmediateHold(btn)
+        BeginHold(btn, Fn(btn, "hold"), "hold")
+    else if On(btn, "hold")
+        SetTimer(rt["holdCb"], -holdMs)
 }
 
-OnTriggerUp(*) {
-    global state, triggerHeld, armedAt, downAt, doubleClickMs
-    triggerHeld := false
-    if state = "singleHold" {
-        wasTap := (A_TickCount - downAt) <= doubleClickMs
-        ReleaseNav()
-        if wasTap {
-            state := "armed"
-            armedAt := A_TickCount
-            SetTimer(ClearArmed, -doubleClickMs)
-        } else
-            state := "idle"
+OnUp(btn, *) {
+    global passThrough, runtime, doubleClickMs
+    if passThrough
         return
+    rt := runtime[btn]
+    rt["held"] := false
+    CancelTimers(btn)
+    switch rt["state"] {
+        case "holding":
+            EndHold()
+            if WantsDouble(btn) && (A_TickCount - rt["downAt"] <= doubleClickMs) {
+                rt["state"] := "armed"
+                SetTimer(rt["armedCb"], -doubleClickMs)
+            } else
+                rt["state"] := "idle"
+        case "doubleHolding":
+            EndHold()
+            rt["state"] := "idle"
+        case "down1":
+            if WantsDouble(btn) {
+                rt["state"] := "armed"
+                SetTimer(rt["armedCb"], -doubleClickMs)
+            } else {
+                rt["state"] := "idle"
+                if On(btn, "single")
+                    FireClick(btn, Fn(btn, "single"))
+            }
+        case "down2":
+            rt["state"] := "idle"
+            if On(btn, "double")
+                FireClick(btn, Fn(btn, "double"))
+        default:
+            rt["state"] := "idle"
     }
-    if state = "doubleHold" {
-        ReleaseNav()
-        state := "idle"
+}
+
+HoldTimer(btn) {
+    global runtime
+    rt := runtime[btn]
+    if rt["state"] = "down1" && rt["held"]
+        BeginHold(btn, Fn(btn, "hold"), "hold")
+}
+
+DoubleHoldTimer(btn) {
+    global runtime
+    rt := runtime[btn]
+    if rt["state"] = "down2" && rt["held"]
+        BeginHold(btn, Fn(btn, "doubleHold"), "doubleHold")
+}
+
+ArmedTimer(btn) {
+    global runtime
+    rt := runtime[btn]
+    if rt["state"] != "armed"
+        return
+    rt["state"] := "idle"
+    if On(btn, "single")
+        FireClick(btn, Fn(btn, "single"))
+}
+
+BeginHold(btn, action, kind) {
+    global runtime
+    rt := runtime[btn]
+    rt["state"] := kind = "doubleHold" ? "doubleHolding" : "holding"
+    StartHold(action)
+}
+
+FireClick(btn, action) {
+    switch action {
+        case "undo":
+            Send("^z")
+            Hint("UNDO")
+        case "redo":
+            Send("^+z")
+            Hint("REDO")
+        case "sample":
+            Send("{LCtrl down}")
+            Click("left")
+            Send("{LCtrl up}")
+            Hint("SAMPLE")
+        case "default":
+            SendPass(btn)
+            Hint(btn = "XButton1" ? "BACK" : "FORWARD")
     }
 }
 
-ClearArmed() {
-    global state
-    if state = "armed"
-        state := "idle"
+SendPass(btn) {
+    global passThrough
+    passThrough := true
+    Send("{Blind}{" btn "}")
+    passThrough := false
 }
 
-ClickHoldAction() {
-    global clickHold
-    return clickHold
-}
-
-OtherAction() {
-    global clickHold
-    return clickHold = "zoom" ? "pan" : "zoom"
-}
-
-StartNav(action) {
-    global currentAction
-    ReleaseNav()
-    if action = "zoom"
-        Send("{LCtrl down}{Space down}")
-    else
-        Send("{Space down}")
-    currentAction := action
+StartHold(action) {
+    global heldFn
+    EndHold()
+    switch action {
+        case "zoom":
+            Send("{LCtrl down}{Space down}")
+        case "pan":
+            Send("{Space down}")
+        case "sample":
+            Send("{LCtrl down}")
+            Click("left")
+        default:
+            return
+    }
+    heldFn := action
     Hint(StrUpper(action))
 }
 
-ReleaseNav() {
-    global currentAction
-    if currentAction = "zoom"
-        Send("{Space up}{LCtrl up}")
-    else if currentAction = "pan"
-        Send("{Space up}")
-    currentAction := ""
-    ToolTip()
-}
-
-OnSampleDown(*) {
-    global sampleState, sampleHeld, sampleHoldMs
-    sampleHeld := true
-    sampleState := "pending"
-    SetTimer(BeginSample, -sampleHoldMs)
-}
-
-OnSampleUp(*) {
-    global sampleState, sampleHeld
-    sampleHeld := false
-    SetTimer(BeginSample, 0)
-    if sampleState = "pending" {
-        sampleState := "idle"
-        Send("^z")
-        Hint("UNDO")
-        return
+EndHold() {
+    global heldFn
+    switch heldFn {
+        case "zoom":
+            Send("{Space up}{LCtrl up}")
+        case "pan":
+            Send("{Space up}")
+        case "sample":
+            Send("{LCtrl up}")
     }
-    if sampleState = "sampling"
-        ReleaseSample()
-}
-
-BeginSample() {
-    global sampleState, sampleHeld
-    if sampleState != "pending" || !sampleHeld
-        return
-    sampleState := "sampling"
-    Send("{LCtrl down}")
-    Click("left")
-    Hint("SAMPLE")
-}
-
-ReleaseSample() {
-    global sampleState
-    if sampleState = "sampling"
-        Send("{LCtrl up}")
-    sampleState := "idle"
+    heldFn := ""
     ToolTip()
 }
 
@@ -202,9 +374,13 @@ Hint(text) {
 }
 
 ReleaseAll() {
-    SetTimer(BeginSample, 0)
-    ReleaseNav()
-    ReleaseSample()
+    global runtime
+    for btn, rt in runtime {
+        CancelTimers(btn)
+        rt["held"] := false
+        rt["state"] := "idle"
+    }
+    EndHold()
 }
 
 OnScriptExit(*) {
@@ -212,16 +388,19 @@ OnScriptExit(*) {
 }
 
 WatchFocus() {
-    global onlyKrita, currentAction, state, triggerHeld, sampleState
-    if onlyKrita && !WinActive("ahk_exe krita.exe") {
-        if currentAction != "" {
-            ReleaseNav()
-            if !triggerHeld
-                state := "idle"
-        }
-        if sampleState = "sampling" || sampleState = "pending"
-            ReleaseSample()
-    }
+    global onlyKrita, heldFn
+    if !onlyKrita || WinActive("ahk_exe krita.exe")
+        return
+    if heldFn != "" || ButtonBusy()
+        ReleaseAll()
+}
+
+ButtonBusy() {
+    global runtime
+    for btn, rt in runtime
+        if rt["held"] || rt["state"] != "idle"
+            return true
+    return false
 }
 
 SetupTray() {
@@ -230,11 +409,11 @@ SetupTray() {
     A_TrayMenu.Add("Alula", (*) => 0)
     A_TrayMenu.Disable("Alula")
     A_TrayMenu.Add()
-    A_TrayMenu.Add("Click-hold = Zoom,  double-hold = Pan", SetZoomFirst)
-    A_TrayMenu.Add("Click-hold = Pan,  double-hold = Zoom", SetPanFirst)
+    A_TrayMenu.Add("Settings...", OpenSettings)
+    A_TrayMenu.Default := "Settings..."
     A_TrayMenu.Add()
     A_TrayMenu.Add("Only while Krita is focused", ToggleOnlyKrita)
-    A_TrayMenu.Add("Show ZOOM / PAN hint", ToggleHint)
+    A_TrayMenu.Add("Show hints", ToggleHint)
     A_TrayMenu.Add()
     A_TrayMenu.Add("Open config.ini", (*) => Run('notepad.exe "' configPath '"'))
     A_TrayMenu.Add("Reload", (*) => Reload())
@@ -242,20 +421,6 @@ SetupTray() {
     A_TrayMenu.Add()
     A_TrayMenu.Add("Run at Windows startup", ToggleStartup)
     A_TrayMenu.Add("Exit", (*) => ExitApp())
-    RefreshTray()
-}
-
-SetZoomFirst(*) {
-    global clickHold
-    clickHold := "zoom"
-    SaveConfig()
-    RefreshTray()
-}
-
-SetPanFirst(*) {
-    global clickHold
-    clickHold := "pan"
-    SaveConfig()
     RefreshTray()
 }
 
@@ -291,24 +456,159 @@ ToggleStartup(*) {
 }
 
 RefreshTray() {
-    global clickHold, onlyKrita, showHint
-    A_TrayMenu.Uncheck("Click-hold = Zoom,  double-hold = Pan")
-    A_TrayMenu.Uncheck("Click-hold = Pan,  double-hold = Zoom")
-    if clickHold = "zoom"
-        A_TrayMenu.Check("Click-hold = Zoom,  double-hold = Pan")
-    else
-        A_TrayMenu.Check("Click-hold = Pan,  double-hold = Zoom")
+    global onlyKrita, showHint, buttons
     if onlyKrita
         A_TrayMenu.Check("Only while Krita is focused")
     else
         A_TrayMenu.Uncheck("Only while Krita is focused")
     if showHint
-        A_TrayMenu.Check("Show ZOOM / PAN hint")
+        A_TrayMenu.Check("Show hints")
     else
-        A_TrayMenu.Uncheck("Show ZOOM / PAN hint")
+        A_TrayMenu.Uncheck("Show hints")
     if IsStartupEnabled()
         A_TrayMenu.Check("Run at Windows startup")
     else
         A_TrayMenu.Uncheck("Run at Windows startup")
-    A_IconTip := "Alula`nRear: click-hold " StrUpper(clickHold) " / double-hold " StrUpper(OtherAction()) "`nFront: click Undo / hold Sample"
+    A_IconTip := "Alula`n4th: " GestureTip(buttons["XButton1"]) "`n5th: " GestureTip(buttons["XButton2"]) "`nDouble-click for settings"
+}
+
+GestureTip(g) {
+    parts := []
+    if g["single"]["on"]
+        parts.Push("click " g["single"]["fn"])
+    if g["double"]["on"]
+        parts.Push("dbl " g["double"]["fn"])
+    if g["hold"]["on"]
+        parts.Push("hold " g["hold"]["fn"])
+    if g["doubleHold"]["on"]
+        parts.Push("dbl-hold " g["doubleHold"]["fn"])
+    return parts.Length ? StrJoin(parts, " / ") : "off"
+}
+
+StrJoin(arr, sep) {
+    out := ""
+    for v in arr
+        out .= (out = "" ? "" : sep) v
+    return out
+}
+
+IndexOf(list, value) {
+    for i, v in list
+        if v = value
+            return i
+    return 1
+}
+
+OpenSettings(*) {
+    global settingsGui, settingsCtrl, buttons, onlyKrita, showHint, doubleClickMs, holdMs
+    if settingsGui {
+        FillSettings(buttons)
+        settingsCtrl["doubleMs"].Value := doubleClickMs
+        settingsCtrl["holdMs"].Value := holdMs
+        settingsCtrl["krita"].Value := onlyKrita
+        settingsCtrl["hint"].Value := showHint
+        settingsGui.Show()
+        return
+    }
+    g := Gui("+OwnDialogs", "Alula settings")
+    g.SetFont("s9", "Segoe UI")
+    g.AddText("w560", "Each 4th/5th-click button has four gestures. Leave a box unchecked to ignore that gesture. Enable it, then assign a function.")
+    settingsCtrl := Map()
+    AddButtonColumn(g, "xm ym+40", "4th click (Back)", "XButton1")
+    AddButtonColumn(g, "x+16 ym+40", "5th click (Forward)", "XButton2")
+    g.AddText("xm y+18", "Double-click window (ms)")
+    settingsCtrl["doubleMs"] := g.AddEdit("x+8 yp-3 w50 Number", doubleClickMs)
+    g.AddText("x+16 yp+3", "Hold threshold (ms)")
+    settingsCtrl["holdMs"] := g.AddEdit("x+8 yp-3 w50 Number", holdMs)
+    settingsCtrl["krita"] := g.AddCheckbox("xm y+12", "Only while Krita is focused")
+    settingsCtrl["hint"] := g.AddCheckbox("x+16 yp", "Show ZOOM / UNDO hints")
+    g.AddButton("xm y+16 w120", "Alula defaults").OnEvent("Click", (*) => FillSettings(AlulaDefaults()))
+    g.AddButton("x+8 w150", "Pass-through only").OnEvent("Click", (*) => FillSettings(PassThroughDefaults()))
+    g.AddButton("x+16 w90 Default", "Save").OnEvent("Click", SaveSettings)
+    g.AddButton("x+8 w90", "Cancel").OnEvent("Click", (*) => settingsGui.Hide())
+    g.OnEvent("Close", (*) => settingsGui.Hide())
+    settingsGui := g
+    settingsCtrl["krita"].Value := onlyKrita
+    settingsCtrl["hint"].Value := showHint
+    FillSettings(buttons)
+    g.Show()
+}
+
+AddButtonColumn(g, pos, title, btn) {
+    global settingsCtrl, clickLabels, holdLabels
+    g.AddGroupBox(pos " Section w270 h178", title)
+    rows := [
+        ["single", "Single click", clickLabels],
+        ["double", "Double click", clickLabels],
+        ["hold", "Click and hold", holdLabels],
+        ["doubleHold", "Double-click and hold", holdLabels]
+    ]
+    y := 28
+    for row in rows {
+        key := row[1]
+        cb := g.AddCheckbox("xs+12 ys+" y " w128", row[2])
+        dd := g.AddDropDownList("x+4 yp-3 w118", row[3])
+        settingsCtrl[btn "|" key "|on"] := cb
+        settingsCtrl[btn "|" key "|fn"] := dd
+        cb.OnEvent("Click", UpdateSettingsEnabled.Bind())
+        y += 34
+    }
+}
+
+FillSettings(btns) {
+    global settingsCtrl, clickActions, holdActions
+    for btn in ["XButton1", "XButton2"] {
+        for key in ["single", "double", "hold", "doubleHold"] {
+            spec := btns[btn][key]
+            settingsCtrl[btn "|" key "|on"].Value := spec["on"]
+            list := (key = "hold" || key = "doubleHold") ? holdActions : clickActions
+            settingsCtrl[btn "|" key "|fn"].Value := IndexOf(list, spec["fn"])
+        }
+    }
+    UpdateSettingsEnabled()
+}
+
+UpdateSettingsEnabled(*) {
+    global settingsCtrl
+    for btn in ["XButton1", "XButton2"] {
+        for key in ["single", "double", "hold", "doubleHold"] {
+            on := settingsCtrl[btn "|" key "|on"].Value
+            settingsCtrl[btn "|" key "|fn"].Enabled := !!on
+        }
+    }
+}
+
+ReadSettingsButtons() {
+    global settingsCtrl, clickActions, holdActions
+    out := Map()
+    for btn in ["XButton1", "XButton2"] {
+        out[btn] := Map()
+        for key in ["single", "double", "hold", "doubleHold"] {
+            list := (key = "hold" || key = "doubleHold") ? holdActions : clickActions
+            idx := Integer(settingsCtrl[btn "|" key "|fn"].Value)
+            if idx < 1
+                idx := 1
+            out[btn][key] := Map(
+                "on", !!settingsCtrl[btn "|" key "|on"].Value,
+                "fn", list[idx]
+            )
+        }
+    }
+    return out
+}
+
+SaveSettings(*) {
+    global settingsGui, settingsCtrl, buttons, onlyKrita, showHint, doubleClickMs, holdMs
+    buttons := ReadSettingsButtons()
+    onlyKrita := !!settingsCtrl["krita"].Value
+    showHint := !!settingsCtrl["hint"].Value
+    doubleClickMs := Integer(settingsCtrl["doubleMs"].Value)
+    holdMs := Integer(settingsCtrl["holdMs"].Value)
+    if doubleClickMs < 50
+        doubleClickMs := 50
+    if holdMs < 50
+        holdMs := 50
+    SaveConfig()
+    settingsGui.Hide()
+    RefreshTray()
 }

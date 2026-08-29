@@ -2,7 +2,11 @@
 
 An extra control surface for a pen’s two barrel buttons — named after a bird’s **alula**, the small “thumb” on the wing.
 
-Alula does not talk to a Wacom driver. It watches **4th click** and **5th click** (Back / Forward mouse buttons). Any tablet or mouse that can send those will work. Defaults are tuned for **Krita** on Windows.
+Alula does not talk to a Wacom driver. It watches **4th click** and **5th click** (Back / Forward mouse buttons). Any tablet or mouse that can send those will work.
+
+Each button can use up to four gestures: **single click**, **double click**, **click and hold**, **double-click and hold**. Tick a gesture in **tray → Settings**, then assign a function. Unticked gestures do nothing.
+
+**Shipped default** is the Krita set you already use:
 
 | Button | Gesture | Action |
 | --- | --- | --- |
@@ -41,7 +45,7 @@ Step-by-step (download AutoHotkey yourself, no PowerShell): **[docs/install-manu
 
 ## Docs
 
-- **[How to use](docs/usage.md)** — gestures, tray menu, Krita shortcuts
+- **[How to use](docs/usage.md)** — settings window, gestures, Krita shortcuts
 - **[Config](docs/config.md)** — `config.ini` keys
 - **[How it works](docs/how-it-works.md)** — why this is not a tablet driver plugin
 
